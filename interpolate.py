@@ -7,6 +7,7 @@ n_objects = len(json.load(open(sys.argv[2])))
 annots = []
 
 data = json.load(open(sys.argv[2]))
+obj_types = [data[i]['type'] for i in range(n_objects)]
 
 for i in range(n_objects):
 	annots.append(data[i]['keyframes'])
@@ -32,7 +33,7 @@ if cap.isOpened():
 
 scale = 29.97
 
-interpolated_boxes = [{}, {}]
+interpolated_boxes = [{}]*n_objects
 for k in range(0, n_objects):
 	cur_boxes = {}
 	for i in range(len(keyframes[k])-1):
@@ -54,11 +55,11 @@ annot_index = [0]*n_objects
 frame_index = [0]*n_objects
 color_map = [(0, 255, 0),(0, 0, 255), (255, 0, 0)]
 
-print max(interpolated_boxes[0]), max(interpolated_boxes[1])
-
+output = []
 frame_no = 0
 while True:
 	ret, frame = cap.read()
+	cur_boxes = {}
 	if not ret:
 		break
 
@@ -66,12 +67,21 @@ while True:
 		if annot_index[k] in interpolated_boxes[k]:
 			pt1, pt2 = interpolated_boxes[k][annot_index[k]]
 			cv2.rectangle(frame, tuple(pt1), tuple(pt2), color_map[k], 2)
+			cur_box = {}
+			cur_box['x'] = pt1[0]; cur_box['y'] = pt1[1];
+			cur_box['w'] = pt2[0]-pt1[0]; cur_box['h'] = pt2[1]-pt1[1];
+			cur_boxes[obj_types[k]]=cur_box
 		if annot_index[k]<(len(interpolated_boxes[k])-1):
 			annot_index[k]+=1
 
+	output.append(cur_boxes)
 	cv2.putText(frame, str(frame_no), (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0))	
 	cv2.imshow('frame', frame)
-	k = cv2.waitKey(0)
+	k = cv2.waitKey(20)
 	if k==27:
 		break
 	frame_no +=1
+
+#output = json.dumps(output, indent=4)
+with open(sys.argv[2][-9:], 'w') as outfile:
+	json.dump(output, outfile)
