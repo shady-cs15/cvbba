@@ -24,8 +24,33 @@ def trackbar_callback(arg):
 	global frame_no
 	frame_no = arg
 
+drawing = False
+ix,iy = -1,-1
+edit_obj = None
+
+updates = {}
+
+def draw_rect(event,x,y,flags,param):
+    global ix,iy,drawing
+
+    if event == cv2.EVENT_LBUTTONDOWN and drawing is True:
+        ix,iy = x,y
+        cv2.rectangle(frame,(ix,iy),(x,y),(0,255,255),3)
+
+    elif event == cv2.EVENT_MOUSEMOVE:
+    	pass
+
+    elif event == cv2.EVENT_LBUTTONUP and drawing is True:
+        drawing = False
+        cv2.rectangle(frame,(ix,iy),(x,y),(0,255,255),2)
+        updates[edit_obj] =(min(ix, x), min(iy, y), abs(ix-x), abs(iy-y))
+        print "press 'a' to accept" 
+  
+    cv2.imshow('frame', frame)
+        
 cv2.namedWindow('frame')
 cv2.createTrackbar('frame#','frame', 0, len(frames)-1, trackbar_callback)
+cv2.setMouseCallback('frame', draw_rect)
 
 rors = {}
 bors = {}
@@ -56,6 +81,22 @@ while frame_no < len(frames):
 
 	cv2.imshow('frame', frame)
 	k = cv2.waitKey(0)
+
+	if k==ord('e'):
+		drawing = True
+		if len(obj_map.keys())>0:
+			print 'index of obj to be annotated'
+			for i in range(len(obj_map.keys())):
+				print i, ':', obj_map.keys()[i]
+			choice = int(raw_input())
+			edit_obj = obj_map.keys()[choice]
+
+	if k==ord('a'):
+		for obj in updates:
+			cur_dim = {}
+			cur_dim['x'], cur_dim['y'], cur_dim['w'], cur_dim['h'] = updates[obj]
+			annot[frame_no][obj] = cur_dim 
+			
 
 	if k==ord('r') and frame_no < len(annot):
 		for cur_obj in annot[frame_no]:
