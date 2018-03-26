@@ -30,6 +30,54 @@ edit_obj = None
 
 updates = {}
 
+def interpolate(cur_idx, cur_obj):
+	next_idx = cur_idx
+	prev_idx = cur_idx
+	for i in range(cur_idx+1, len(frames)):
+		if cur_obj in annot[i]:
+			next_idx = i
+			break
+	delta = next_idx-cur_idx
+	delta_x = annot[next_idx][cur_obj]['x']-annot[cur_idx][cur_obj]['x']
+	delta_y = annot[next_idx][cur_obj]['y']-annot[cur_idx][cur_obj]['y']
+	delta_w = annot[next_idx][cur_obj]['w']-annot[cur_idx][cur_obj]['w']
+	delta_h = annot[next_idx][cur_obj]['h']-annot[cur_idx][cur_obj]['h']
+	for i in range(cur_idx+1, next_idx):
+		cur_delta = i - cur_idx
+		cur_box = {}
+		del_x = cur_delta*(delta_x)/delta
+		del_y = cur_delta*(delta_y)/delta
+		del_w = cur_delta*(delta_w)/delta
+		del_h = cur_delta*(delta_h)/delta
+		cur_box['x'] = annot[cur_idx][cur_obj]['x'] + del_x
+		cur_box['y'] = annot[cur_idx][cur_obj]['y'] + del_y
+		cur_box['w'] = annot[cur_idx][cur_obj]['w'] + del_w
+		cur_box['h'] = annot[cur_idx][cur_obj]['h'] + del_h
+		annot[i][cur_obj] = cur_box		
+
+	for i in range(cur_idx-1, -1, -1):
+		if cur_obj in annot[i]:
+			prev_idx = i
+			break
+	delta = cur_idx-prev_idx
+	delta_x = annot[next_idx][cur_obj]['x']-annot[cur_idx][cur_obj]['x']
+	delta_y = annot[next_idx][cur_obj]['y']-annot[cur_idx][cur_obj]['y']
+	delta_w = annot[next_idx][cur_obj]['w']-annot[cur_idx][cur_obj]['w']
+	delta_h = annot[next_idx][cur_obj]['h']-annot[cur_idx][cur_obj]['h']
+	for i in range(prev_idx+1, cur_idx):
+		cur_delta = i - prev_idx
+		cur_box = {}
+		del_x = cur_delta*(delta_x)/delta
+		del_y = cur_delta*(delta_y)/delta
+		del_w = cur_delta*(delta_w)/delta
+		del_h = cur_delta*(delta_h)/delta
+		cur_box['x'] = annot[prev_idx][cur_obj]['x'] + del_x
+		cur_box['y'] = annot[prev_idx][cur_obj]['y'] + del_y
+		cur_box['w'] = annot[prev_idx][cur_obj]['w'] + del_w
+		cur_box['h'] = annot[prev_idx][cur_obj]['h'] + del_h
+		annot[i][cur_obj] = cur_box				
+
+
 def draw_rect(event,x,y,flags,param):
     global ix,iy,drawing
 
@@ -89,13 +137,16 @@ while frame_no < len(frames):
 			for i in range(len(obj_map.keys())):
 				print i, ':', obj_map.keys()[i]
 			choice = int(raw_input())
-			edit_obj = obj_map.keys()[choice]
+			if choice in obj_map.values():
+				edit_obj = obj_map.keys()[choice]
 
 	if k==ord('a'):
 		for obj in updates:
 			cur_dim = {}
 			cur_dim['x'], cur_dim['y'], cur_dim['w'], cur_dim['h'] = updates[obj]
-			annot[frame_no][obj] = cur_dim 
+			annot[frame_no][obj] = cur_dim
+			print obj
+			interpolate(frame_no, obj)
 			
 
 	if k==ord('r') and frame_no < len(annot):
