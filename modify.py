@@ -60,10 +60,10 @@ def interpolate(cur_idx, cur_obj):
 			prev_idx = i
 			break
 	delta = cur_idx-prev_idx
-	delta_x = annot[next_idx][cur_obj]['x']-annot[cur_idx][cur_obj]['x']
-	delta_y = annot[next_idx][cur_obj]['y']-annot[cur_idx][cur_obj]['y']
-	delta_w = annot[next_idx][cur_obj]['w']-annot[cur_idx][cur_obj]['w']
-	delta_h = annot[next_idx][cur_obj]['h']-annot[cur_idx][cur_obj]['h']
+	delta_x = annot[cur_idx][cur_obj]['x']-annot[prev_idx][cur_obj]['x']
+	delta_y = annot[cur_idx][cur_obj]['y']-annot[prev_idx][cur_obj]['y']
+	delta_w = annot[cur_idx][cur_obj]['w']-annot[prev_idx][cur_obj]['w']
+	delta_h = annot[cur_idx][cur_obj]['h']-annot[prev_idx][cur_obj]['h']
 	for i in range(prev_idx+1, cur_idx):
 		cur_delta = i - prev_idx
 		cur_box = {}
