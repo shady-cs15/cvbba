@@ -147,6 +147,7 @@ while frame_no < len(frames):
 			annot[frame_no][obj] = cur_dim
 			print obj
 			interpolate(frame_no, obj)
+		updates = {}
 			
 
 	if k==ord('r') and frame_no < len(annot):
