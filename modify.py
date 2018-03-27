@@ -20,6 +20,8 @@ while True:
 		break
 	frames.append(frame)
 
+print len(frames), len(annot)
+
 def trackbar_callback(arg):
 	global frame_no
 	frame_no = arg
@@ -33,27 +35,30 @@ updates = {}
 def interpolate(cur_idx, cur_obj):
 	next_idx = cur_idx
 	prev_idx = cur_idx
+	
 	for i in range(cur_idx+1, len(frames)):
 		if cur_obj in annot[i]:
 			next_idx = i
 			break
-	delta = next_idx-cur_idx
-	delta_x = annot[next_idx][cur_obj]['x']-annot[cur_idx][cur_obj]['x']
-	delta_y = annot[next_idx][cur_obj]['y']-annot[cur_idx][cur_obj]['y']
-	delta_w = annot[next_idx][cur_obj]['w']-annot[cur_idx][cur_obj]['w']
-	delta_h = annot[next_idx][cur_obj]['h']-annot[cur_idx][cur_obj]['h']
-	for i in range(cur_idx+1, next_idx):
-		cur_delta = i - cur_idx
-		cur_box = {}
-		del_x = cur_delta*(delta_x)/delta
-		del_y = cur_delta*(delta_y)/delta
-		del_w = cur_delta*(delta_w)/delta
-		del_h = cur_delta*(delta_h)/delta
-		cur_box['x'] = annot[cur_idx][cur_obj]['x'] + del_x
-		cur_box['y'] = annot[cur_idx][cur_obj]['y'] + del_y
-		cur_box['w'] = annot[cur_idx][cur_obj]['w'] + del_w
-		cur_box['h'] = annot[cur_idx][cur_obj]['h'] + del_h
-		annot[i][cur_obj] = cur_box		
+	if next_idx < cur_idx + 5:
+		delta = next_idx-cur_idx
+		delta_x = annot[next_idx][cur_obj]['x']-annot[cur_idx][cur_obj]['x']
+		delta_y = annot[next_idx][cur_obj]['y']-annot[cur_idx][cur_obj]['y']
+		delta_w = annot[next_idx][cur_obj]['w']-annot[cur_idx][cur_obj]['w']
+		delta_h = annot[next_idx][cur_obj]['h']-annot[cur_idx][cur_obj]['h']
+		for i in range(cur_idx+1, next_idx):
+			cur_delta = i - cur_idx
+			cur_box = {}
+			del_x = cur_delta*(delta_x)/delta
+			del_y = cur_delta*(delta_y)/delta
+			del_w = cur_delta*(delta_w)/delta
+			del_h = cur_delta*(delta_h)/delta
+			cur_box['x'] = annot[cur_idx][cur_obj]['x'] + del_x
+			cur_box['y'] = annot[cur_idx][cur_obj]['y'] + del_y
+			cur_box['w'] = annot[cur_idx][cur_obj]['w'] + del_w
+			cur_box['h'] = annot[cur_idx][cur_obj]['h'] + del_h
+			annot[i][cur_obj] = cur_box		
+		
 
 	for i in range(cur_idx-1, -1, -1):
 		if cur_obj in annot[i]:
@@ -168,6 +173,7 @@ while frame_no < len(frames):
 		for obj in rors:
 			for rej_id in range(rors[obj][0], rors[obj][1]+1):
 				annot[rej_id].pop(obj, None)
+			rors[obj] = (-1, -1)
 
 	
 	if k==ord('b'):
