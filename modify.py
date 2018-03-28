@@ -136,7 +136,24 @@ while frame_no < len(frames):
 	k = cv2.waitKey(0)
 
 	if k==ord('e'):
-		drawing = True
+		if edit_obj is not None:
+			print 'frame #:', frame_no, ',',
+			drawing = True
+		else:
+			print 'first press "c" choose object'
+	if k==ord('h'):
+		print '-'*len('Key bindings')
+		print 'Key bindings'
+		print '-'*len('Key bindings')
+		print 'r: remove/delete a region of annotation (start -> end)'
+		print 'e: edit/modify annotation, interpolates from the previous annotated frame'
+		print 's: quick save annotations to file'
+		print 'c: chose/change object to be annotated'
+		print 'space: move forward'
+		print 'b: move backward'
+		print 'esc: close'
+
+	if k==ord('c'):
 		if len(obj_map.keys())>0:
 			print 'index of obj to be annotated'
 			for i in range(len(obj_map.keys())):
@@ -144,13 +161,13 @@ while frame_no < len(frames):
 			choice = int(raw_input())
 			if choice in obj_map.values():
 				edit_obj = obj_map.keys()[choice]
+				print 'object chosen to edit:', edit_obj
 
 	if k==ord('a'):
 		for obj in updates:
 			cur_dim = {}
 			cur_dim['x'], cur_dim['y'], cur_dim['w'], cur_dim['h'] = updates[obj]
 			annot[frame_no][obj] = cur_dim
-			print obj
 			interpolate(frame_no, obj)
 		updates = {}
 			
@@ -175,18 +192,25 @@ while frame_no < len(frames):
 				annot[rej_id].pop(obj, None)
 			rors[obj] = (-1, -1)
 
-	
+	if k==ord('s'):
+		with open(out_annot, 'w') as outfile:
+			json.dump(annot, outfile)
+		print 'annotations dumped into', outfile
+
 	if k==ord('b'):
 		if frame_no > 0:
 			frame_no -= 1
+
 	if k==27:
 		break
+
 	if k==ord(' '):
 		if frame_no < len(frames)-1:
 			frame_no +=1
+
 	cv2.setTrackbarPos('frame#', 'frame', frame_no)
 
-print 'Accept modified annotations? (y/n)',
+print 'save modified annotations? (y/n)',
 choice = raw_input()
 if choice =='y':
 	with open(out_annot, 'w') as outfile:
