@@ -138,7 +138,6 @@ while frame_no < len(frames):
 			obj_map[cur_obj] = obj_no
 			obj_no +=1
 
-		# create entry in rors
 		if cur_obj not in rors:
 			rors[cur_obj]=(-1, -1)
 
@@ -147,14 +146,18 @@ while frame_no < len(frames):
 			pt1 = [int(cur_box['x']), int(cur_box['y'])]
 			pt2 = [int(cur_box['x'] + cur_box['w']), int(cur_box['y'] + cur_box['h'])]
 			cv2.rectangle(frame, tuple(pt1), tuple(pt2), color_map[obj_map[cur_obj]], 2)
+			text_size = cv2.getTextSize(cur_obj, cv2.FONT_HERSHEY_COMPLEX, 0.7, 1)
+			#print text_size
+			cv2.rectangle(frame, (pt1[0], pt1[1] - 10), (pt1[0]+ text_size[0][0], pt1[1] - 10 - text_size[0][1]), color_map[obj_map[cur_obj]], -1);
+			cv2.putText(frame, cur_obj, (pt1[0], pt1[1] - 10), cv2.FONT_HERSHEY_COMPLEX, 0.7, (255, 255, 255), 1)
 
 	cv2.imshow('frame', frame)
 	k = cv2.waitKey(0)
 
 	if k==ord('e'):
 		if edit_obj is not None:
-			print 'frame #:', frame_no, ',',
 			drawing = True
+			print 'frame #:', frame_no, ',',
 		else:
 			print 'first press "c" choose object'
 	if k==ord('h'):
@@ -166,6 +169,7 @@ while frame_no < len(frames):
 		print 's: quick save annotations to file'
 		print 'c: chose/change object to be annotated/removed'
 		print 'i: add new class'
+		print 'n: change name of existing class'
 		print 'space: move forward'
 		print 'b: move backward'
 		print 'esc: close'
@@ -227,6 +231,25 @@ while frame_no < len(frames):
 		else:
 			obj_map[name]=0
 
+	if k==ord('n'):
+		print 'index of name to be updated?'
+		for i in range(len(obj_map.keys())):
+			print i, ':', obj_map.keys()[i]
+		choice = cv2.waitKey(0)-48
+		old = obj_map.keys()[choice]
+		print 'update', old, 'to:',
+		new = raw_input()
+		if edit_obj == old:
+			edit_obj = new
+		old_val = obj_map[old]
+		obj_map.pop(old)
+		obj_map[new] = old_val
+		for i in range(len(annot)):
+			if old in annot[i]:
+				old_val = annot[i][old]
+				annot[i].pop(old)
+				annot[i][new] = old_val
+
 	if k==27:
 		break
 
@@ -241,4 +264,5 @@ choice = cv2.waitKey(0)
 if choice ==ord('y'):
 	with open(out_annot, 'w') as outfile:
 		json.dump(annot, outfile)
+		print 'annotations dumped into', outfile
 
