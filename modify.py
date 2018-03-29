@@ -28,7 +28,7 @@ if len(annot)>len(frames):
 if len(annot)<len(frames):
 	for i in range(len(frames)-len(annot)):
 		annot.append({})
-		
+
 print len(frames), len(annot)
 
 def trackbar_callback(arg):
@@ -175,7 +175,7 @@ while frame_no < len(frames):
 			print 'index of obj to be annotated'
 			for i in range(len(obj_map.keys())):
 				print i, ':', obj_map.keys()[i]
-			choice = int(raw_input())
+			choice = cv2.waitKey(0)-48
 			if choice in obj_map.values():
 				edit_obj = obj_map.keys()[choice]
 				print 'object chosen to edit:', edit_obj
@@ -222,7 +222,10 @@ while frame_no < len(frames):
 	if k==ord('i'):
 		print 'enter name:',
 		name = raw_input()
-		obj_map[name]=max(obj_map.values())+1
+		if len(obj_map.values())>0:
+			obj_map[name]=max(obj_map.values())+1
+		else:
+			obj_map[name]=0
 
 	if k==27:
 		break
@@ -233,9 +236,9 @@ while frame_no < len(frames):
 
 	cv2.setTrackbarPos('frame#', 'frame', frame_no)
 
-print 'save modified annotations? (y/n)',
-choice = raw_input()
-if choice =='y':
+print 'save modified annotations? Press (y/n)'
+choice = cv2.waitKey(0)
+if choice ==ord('y'):
 	with open(out_annot, 'w') as outfile:
 		json.dump(annot, outfile)
 
