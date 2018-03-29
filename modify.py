@@ -22,6 +22,13 @@ while True:
 		break
 	frames.append(frame)
 
+if len(annot)>len(frames):
+	print 'annotation file size > # frames'
+
+if len(annot)<len(frames):
+	for i in range(len(frames)-len(annot)):
+		annot.append({})
+		
 print len(frames), len(annot)
 
 def trackbar_callback(arg):
@@ -157,7 +164,8 @@ while frame_no < len(frames):
 		print 'r: remove/delete a region of annotation (start -> end)'
 		print 'e: edit/modify annotation, interpolates from the previous annotated frame'
 		print 's: quick save annotations to file'
-		print 'c: chose/change object to be annotated'
+		print 'c: chose/change object to be annotated/removed'
+		print 'i: add new class'
 		print 'space: move forward'
 		print 'b: move backward'
 		print 'esc: close'
@@ -182,20 +190,6 @@ while frame_no < len(frames):
 			
 
 	if k==ord('r') and frame_no < len(annot):
-		'''
-		for cur_obj in annot[frame_no]:
-			print 'frame:', frame_no, 'reject annotations for', cur_obj, '? (y/n)',
-			choice = raw_input()
-			if choice =='y':
-				if accept_annot[obj_map[cur_obj]] is True:
-					bors[cur_obj] = frame_no
-					accept_annot[obj_map[cur_obj]] = False
-			if choice == 'n':
-				if accept_annot[obj_map[cur_obj]] is False:
-					print 'rejection region:', bors[cur_obj], '->', frame_no
-					accept_annot[obj_map[cur_obj]] = True
-					rors[cur_obj]=(bors[cur_obj], frame_no)
-		'''
 		if edit_obj is None:
 			print "press 'c' to choose object first"
 		else:
@@ -211,7 +205,6 @@ while frame_no < len(frames):
 					accept_annot[obj_map[edit_obj]] = True
 					rors[edit_obj]=(bors[edit_obj], frame_no)
 
-			# update rors
 			for obj in rors:
 				for rej_id in range(rors[obj][0], rors[obj][1]+1):
 					annot[rej_id].pop(obj, None)
@@ -225,6 +218,11 @@ while frame_no < len(frames):
 	if k==ord('b'):
 		if frame_no > 0:
 			frame_no -= 1
+
+	if k==ord('i'):
+		print 'enter name:',
+		name = raw_input()
+		obj_map[name]=max(obj_map.values())+1
 
 	if k==27:
 		break
