@@ -14,6 +14,8 @@ if cap.isOpened():
 	print 'video file loaded!'
 
 frames = []
+frame = None 
+
 while True:
 	ret, frame = cap.read()
 	if not ret:
@@ -82,24 +84,30 @@ def interpolate(cur_idx, cur_obj):
 		cur_box['h'] = annot[prev_idx][cur_obj]['h'] + del_h
 		annot[i][cur_obj] = cur_box				
 
+mouse_pressed = False
 
 def draw_rect(event,x,y,flags,param):
-    global ix,iy,drawing
+    global ix,iy,drawing, mouse_pressed, frame
 
     if event == cv2.EVENT_LBUTTONDOWN and drawing is True:
         ix,iy = x,y
-        cv2.rectangle(frame,(ix,iy),(x,y),(0,255,255),3)
+        mouse_pressed = True
 
-    elif event == cv2.EVENT_MOUSEMOVE:
-    	pass
+    elif event == cv2.EVENT_MOUSEMOVE and drawing is True and mouse_pressed is True:
+    	framec = frame.copy()
+    	framec2 = frame.copy()
+    	cv2.rectangle(framec,(ix,iy),(x,y),(0,255,255),-1)
+    	framec2 = cv2.addWeighted(framec, 0.3, framec2, 0.7, 0, framec2)
+    	cv2.imshow('frame', framec2)
 
     elif event == cv2.EVENT_LBUTTONUP and drawing is True:
         drawing = False
         cv2.rectangle(frame,(ix,iy),(x,y),(0,255,255),2)
         updates[edit_obj] =(min(ix, x), min(iy, y), abs(ix-x), abs(iy-y))
-        print "press 'a' to accept" 
+        print "press 'a' to accept"
+        mouse_pressed = False 
   
-    cv2.imshow('frame', frame)
+    #cv2.imshow('frame', frame)
         
 cv2.namedWindow('frame')
 cv2.createTrackbar('frame#','frame', 0, len(frames)-1, trackbar_callback)
@@ -112,6 +120,7 @@ accept_annot = [True]*10
 frame_no = 0
 obj_no = 0
 obj_map = {}
+rej_tog = False
 	
 while frame_no < len(frames):
 	frame = frames[frame_no].copy()
@@ -173,6 +182,7 @@ while frame_no < len(frames):
 			
 
 	if k==ord('r') and frame_no < len(annot):
+		'''
 		for cur_obj in annot[frame_no]:
 			print 'frame:', frame_no, 'reject annotations for', cur_obj, '? (y/n)',
 			choice = raw_input()
@@ -185,12 +195,27 @@ while frame_no < len(frames):
 					print 'rejection region:', bors[cur_obj], '->', frame_no
 					accept_annot[obj_map[cur_obj]] = True
 					rors[cur_obj]=(bors[cur_obj], frame_no)
+		'''
+		if edit_obj is None:
+			print "press 'c' to choose object first"
+		else:
+			rej_tog = not rej_tog
+			if rej_tog is True:
+				print 'frame:', frame_no, 'start reject annotations for', edit_obj
+				if accept_annot[obj_map[edit_obj]] is True:
+					bors[edit_obj] = frame_no
+					accept_annot[obj_map[edit_obj]] = False
+			else:
+				if accept_annot[obj_map[edit_obj]] is False:
+					print 'rejection region:', bors[edit_obj], '->', frame_no
+					accept_annot[obj_map[edit_obj]] = True
+					rors[edit_obj]=(bors[edit_obj], frame_no)
 
-		# update rors
-		for obj in rors:
-			for rej_id in range(rors[obj][0], rors[obj][1]+1):
-				annot[rej_id].pop(obj, None)
-			rors[obj] = (-1, -1)
+			# update rors
+			for obj in rors:
+				for rej_id in range(rors[obj][0], rors[obj][1]+1):
+					annot[rej_id].pop(obj, None)
+				rors[obj] = (-1, -1)
 
 	if k==ord('s'):
 		with open(out_annot, 'w') as outfile:
